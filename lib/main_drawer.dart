@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:myanmar_book/db/Book.dart';
 import 'package:myanmar_book/detail_screen.dart';
 import 'package:myanmar_book/main.dart';
 
@@ -8,6 +9,10 @@ class MainDrawer extends StatefulWidget {
 }
 
 class _MainDrawerState extends State<MainDrawer> {
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  List<Book> mmList = [];
+  List<Book> enList = [];
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -55,7 +60,7 @@ class _MainDrawerState extends State<MainDrawer> {
                   ),
                 ),
                 ListTile(
-                  onTap: () {
+                  onTap: () async {
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) => HomePage()));
                   },
@@ -69,12 +74,21 @@ class _MainDrawerState extends State<MainDrawer> {
                   ),
                 ),
                 ListTile(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                DetailListScreen(name: "ျမန္မာ")));
+                  onTap: () async {
+                    List<Book> list = await _databaseHelper.getAllTest();
+                    setState(() {
+                      for (var l in list) {
+                        if (l.type == "m") {
+                          mmList.add(l);
+                        }
+                      }
+                      mmList = list;
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => DetailListScreen(
+                                  name: "ျမန္မာ", bookList: mmList)));
+                    });
                   },
                   leading: Icon(
                     Icons.library_books,
@@ -86,12 +100,22 @@ class _MainDrawerState extends State<MainDrawer> {
                   ),
                 ),
                 ListTile(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                DetailListScreen(name: "English")));
+                  onTap: () async {
+                    List<Book> list = await _databaseHelper.getAllTest();
+
+                    setState(() {
+                      for (var l in list) {
+                        if (l.type == "e") {
+                          enList.add(l);
+                        }
+                      }
+                      // bookList = list;
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => DetailListScreen(
+                                  name: "English", bookList: enList)));
+                    });
                   },
                   leading: Icon(
                     Icons.library_books,

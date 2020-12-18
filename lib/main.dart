@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:myanmar_book/db/Book.dart';
 import 'package:myanmar_book/detail_screen.dart';
 import 'package:myanmar_book/main_drawer.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:flutter/widgets.dart';
+import 'package:path/path.dart';
 
-void main() {
+void main() async {
+// Avoid errors caused by flutter upgrade.
+// Importing 'package:flutter/widgets.dart' is required.
+  WidgetsFlutterBinding.ensureInitialized();
+// Open the database and store the reference.
+  final Future<Database> database = openDatabase(
+    // Set the path to the database. Note: Using the `join` function from the
+    // `path` package is best practice to ensure the path is correctly
+    // constructed for each platform.
+    join(await getDatabasesPath(), 'doggie_database.db'),
+  );
+
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -23,6 +37,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  List<Book> mmList = [];
+  List<Book> enList = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,10 +54,43 @@ class _HomePageState extends State<HomePage> {
             FlagItem(
               image: "images/img_myanmar_flag.png",
               name: "ျမန္မာ",
+              ontap: () async {
+                List<Book> list = await _databaseHelper.getAllTest();
+                setState(() {
+                  for (var l in list) {
+                    if (l.type == "m") {
+                      mmList.add(l);
+                    }
+                  }
+
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => DetailListScreen(
+                              name: "ျမန္မာ", bookList: mmList)));
+                });
+              },
             ),
             FlagItem(
               image: "images/img_english_flag.png",
               name: "English",
+              ontap: () async {
+                List<Book> list = await _databaseHelper.getAllTest();
+
+                setState(() {
+                  for (var l in list) {
+                    if (l.type == "e") {
+                      enList.add(l);
+                    }
+                  }
+                  // bookList = list;
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => DetailListScreen(
+                              name: "English", bookList: enList)));
+                });
+              },
             ),
           ],
         ),
@@ -48,23 +99,25 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class FlagItem extends StatelessWidget {
+class FlagItem extends StatefulWidget {
   final String name;
   final String image;
+  final Function ontap;
 
-  const FlagItem({this.name, this.image});
+  const FlagItem({this.name, this.image, this.ontap});
+
+  @override
+  _FlagItemState createState() => _FlagItemState();
+}
+
+class _FlagItemState extends State<FlagItem> {
+  List<Book> bookList = [];
+  Book currentbook;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => DetailListScreen(
-                      name: name,
-                    )));
-      },
+      onTap: widget.ontap,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +125,7 @@ class FlagItem extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Text(
-              "$name",
+              "${widget.name}",
               style: TextStyle(fontSize: 20),
             ),
           ),
@@ -90,7 +143,7 @@ class FlagItem extends StatelessWidget {
               width: double.infinity,
               height: 200,
               fit: BoxFit.cover,
-              image: AssetImage("$image"),
+              image: AssetImage("${widget.image}"),
             ),
           ),
         ],
